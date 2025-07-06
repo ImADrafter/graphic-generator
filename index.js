@@ -1,13 +1,13 @@
 import fetch from "node-fetch";
 import { createCanvas, loadImage } from "canvas";
 import fs from "fs";
-// import json from '/tmp/weather.json' with { type: 'json' };
+import { execFile } from "child_process";
 
 const LAT = 40.47;
 const LON = -3.69;
 
-const WIDTH = 1090;
-const HEIGHT = 540;
+const WIDTH = 1024;
+const HEIGHT = 768;
 
 const TIME_SLOTS = 14;
 
@@ -25,7 +25,11 @@ const getIcon = async (d) => {
 
 const drawTempBox = (x, ctx, tmp, text, fontSize = 30) => {
   ctx.font = `bold 120px Ubuntu`;
-  ctx.fillText(tmp, HEADER_PADDING + x + 60, HEADER_FONT_SIZE + HEADER_PADDING + 100);
+  ctx.fillText(
+    tmp,
+    HEADER_PADDING + x + 60,
+    HEADER_FONT_SIZE + HEADER_PADDING + 100,
+  );
 
   ctx.font = `${fontSize}px Ubuntu`;
   ctx.fillText(
@@ -71,12 +75,15 @@ const drawLine = (x, ctx) => {
 };
 
 async function drawWeather() {
-	const response = await fetch(`https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${LAT}&lon=${LON}`, {
-			headers: {
-				"User-Agent": "Weather Personal Project"
-			}
-	});
-	const json = await response.json();
+  const response = await fetch(
+    `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${LAT}&lon=${LON}`,
+    {
+      headers: {
+        "User-Agent": "Weather Personal Project",
+      },
+    },
+  );
+  const json = await response.json();
 
   const [current, ...data] = json.properties.timeseries
     .slice(0, TIME_SLOTS + 1)
@@ -87,12 +94,8 @@ async function drawWeather() {
       humidity: entry.data.instant.details.relative_humidity,
     }));
 
-  const canvas = createCanvas(HEIGHT, WIDTH);
+  const canvas = createCanvas(WIDTH, HEIGHT);
   const ctx = canvas.getContext("2d");
-
-ctx.translate(canvas.width + 6, canvas.width + 280);
-ctx.rotate(270 * Math.PI / 180);
-ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
   ctx.textAlign = "center";
 
@@ -136,14 +139,43 @@ ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
     const barHeight =
       ((d.temp - minTemp) / (maxTemp - minTemp)) *
-      (HEIGHT - HEADER_HEIGHT - 140);
+      (HEIGHT - HEADER_HEIGHT - 150);
 
     ctx.fillStyle = "grey";
-    ctx.fillRect(x + 30, HEADER_HEIGHT + 250 - barHeight, 20, barHeight);
-
+    ctx.fillRect(x + 30, HEADER_HEIGHT + 370 - barHeight, 20, barHeight);
 
     const buffer = canvas.toBuffer("image/png");
-    fs.writeFileSync("weather.png", buffer);
+
+    return new Promise((resolve) => {
+      fs.writeFileSync("weather.png", buffer);
+
+      execFile(
+        "magick",
+        [
+          "weather.png",
+          "-gravity",
+          "center",
+          "-rotate",
+          "270",
+          "-extent",
+          "768x1024",
+          "-colorspace",
+          "gray",
+          "-depth",
+          "8",
+          "weather_final.png",
+        ],
+        (err, stdout) => {
+          if (err) {
+            console.error("Error executing convert command:", err);
+            return;
+          } else {
+            console.log("Image converted successfully:", stdout);
+            resolve();
+          }
+        },
+      );
+    });
   });
 }
 

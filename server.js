@@ -18,7 +18,7 @@ app.get('/generate', (req, res) => {
     if (stderr) console.error(`stderr: ${stderr}`);
 
     // Supongamos que tu script guarda 'output.png' en el mismo directorio
-    const filePath = path.join(__dirname, './weather.png');
+    const filePath = path.join(__dirname, './weather_final.png');
     res.sendFile(filePath);
   });
 });
