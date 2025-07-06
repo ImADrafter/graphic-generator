@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import { createCanvas, loadImage } from "canvas";
 import fs from "fs";
+// import json from '/tmp/weather.json' with { type: 'json' };
 
 const LAT = 40.47;
 const LON = -3.69;
@@ -86,8 +87,12 @@ async function drawWeather() {
       humidity: entry.data.instant.details.relative_humidity,
     }));
 
-  const canvas = createCanvas(WIDTH, HEIGHT);
+  const canvas = createCanvas(HEIGHT, WIDTH);
   const ctx = canvas.getContext("2d");
+
+ctx.translate(canvas.width + 6, canvas.width + 280);
+ctx.rotate(270 * Math.PI / 180);
+ctx.translate(-canvas.width / 2, -canvas.height / 2);
 
   ctx.textAlign = "center";
 
@@ -135,6 +140,7 @@ async function drawWeather() {
 
     ctx.fillStyle = "grey";
     ctx.fillRect(x + 30, HEADER_HEIGHT + 250 - barHeight, 20, barHeight);
+
 
     const buffer = canvas.toBuffer("image/png");
     fs.writeFileSync("weather.png", buffer);
