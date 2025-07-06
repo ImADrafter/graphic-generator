@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "try": "node index.js && open ./weather.png",
-    "try:watch": "node --watch index.js"
+    "try:watch": "node --watch index.js",
+	"serve": "node ./server.js"
   },
   "author": "",
   "license": "ISC",
